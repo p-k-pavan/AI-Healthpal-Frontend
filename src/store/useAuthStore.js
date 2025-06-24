@@ -100,7 +100,7 @@ export const useAuthStore = create(
     }),
     {
       name: 'ai-healthpal-auth',
-      storage: createJSONStorage(() => sessionStorage),
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ 
         user: state.user,
         token: state.token,
