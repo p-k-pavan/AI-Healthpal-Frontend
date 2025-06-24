@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from "react-router-dom";
-import axios from 'axios';
 import { toast } from 'react-toastify';
+import { useAuthStore } from '../store/useAuthStore';
 
 const SignUp = () => {
     const [showPassword, setShowPassword] = useState(false);
-    const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         name: '',
@@ -16,7 +15,8 @@ const SignUp = () => {
         password: ''
     });
 
-    console.log(formData)
+    const register = useAuthStore((state) => state.register);
+    const status = useAuthStore((state) => state.status);
 
     const handleChange = (e) => {
         const { id, value } = e.target;
@@ -28,28 +28,16 @@ const SignUp = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
         try {
-            const res = await axios.post(
-                `http://localhost:5000/api/auth/register`,
-                formData,
-                {
-                    withCredentials: true,
-                    headers: {
-                        'Content-Type': 'application/json'
-                    }
-                }
-            );
-
-            if (res.data.success === true) {
-                toast.success('Registration successful!');
-                setTimeout(() => navigate("/login"), 2000);
+            const { success } = await register(formData);
+            if (success) {
+                toast.success('Register successful!');
+                navigate('/');
             }
         } catch (error) {
-            const backendMessage = error?.response?.data?.message || error.message;
-            toast.error(`Registration Error: ${backendMessage}`);
-        } finally {
-            setLoading(false);
+            const message = error.response?.data?.message || error.message;
+            toast.error(`Register failed: ${message}`);
+            setFormData(prev => ({ ...prev, password: '' }));
         }
     };
 
@@ -201,6 +189,7 @@ const SignUp = () => {
                                     <button
                                         type="submit"
                                         className="w-full bg-gradient-to-r from-[#7f5539] to-[#6a4630] text-white py-3 px-4 rounded-lg font-semibold hover:opacity-90 transition focus:outline-none focus:ring-2 focus:ring-[#7f5539] focus:ring-offset-2 shadow-md"
+                                        disabled={status === 'loading'}
                                     >
                                         Sign Up as {formData.role}
                                     </button>
